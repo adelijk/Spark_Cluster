@@ -1,0 +1,17 @@
+[Unit]
+Description=Apache Spark Worker
+After=network.target
+
+[Service]
+Environment="SPARK_HOME=/opt/spark"
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+Environment="SPARK_LOCAL_IP={{ ansible_host }}"
+ExecStart=/opt/spark/sbin/start-worker.sh spark://spark-master:7077
+ExecStop=/opt/spark/sbin/stop-worker.sh
+User=debian
+Type=forking
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=Apache Spark Master
+After=network.target
+
+[Service]
+Environment="SPARK_HOME=/opt/spark"
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+Environment="SPARK_MASTER_HOST={{ ansible_host }}"
+Environment="SPARK_LOCAL_IP={{ ansible_host }}"
+Environment="SPARK_MASTER_WEBUI_HOST={{ ansible_host }}"
+ExecStart=/opt/spark/sbin/start-master.sh
+ExecStop=/opt/spark/sbin/stop-master.sh
+User=debian
+Type=forking
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

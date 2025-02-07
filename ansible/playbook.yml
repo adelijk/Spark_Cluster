@@ -1,0 +1,66 @@
+---
+- name: Common Spark Setup
+  hosts: spark_cluster
+  become: yes
+  tasks:
+    - name: Update hosts file
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars['spark-master']['ansible_host'] }} spark-master"
+        state: present
+
+    - name: Install Java
+      apt:
+        name: default-jdk
+        update_cache: yes
+        state: present
+
+    - name: Download Spark
+      get_url:
+        url: "https://dlcdn.apache.org/spark/spark-3.5.4/spark-3.5.4-bin-hadoop3.tgz"
+        dest: "/tmp/spark.tgz"
+
+    - name: Extract Spark
+      unarchive:
+        src: "/tmp/spark.tgz"
+        dest: "/opt"
+        remote_src: yes
+        creates: "/opt/spark-3.5.4-bin-hadoop3"
+
+    - name: Create Spark symlink
+      file:
+        src: "/opt/spark-3.5.4-bin-hadoop3"
+        dest: "/opt/spark"
+        state: link
+
+- name: Configure Spark Master
+  hosts: master
+  become: yes
+  tasks:
+    - name: Create Spark master service
+      template:
+        src: templates/spark-master.service.j2
+        dest: /etc/systemd/system/spark-master.service
+
+    - name: Start Spark master
+      systemd:
+        name: spark-master
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+- name: Configure Spark Workers
+  hosts: workers
+  become: yes
+  tasks:
+    - name: Create Spark worker service
+      template:
+        src: templates/spark-worker.service.j2
+        dest: /etc/systemd/system/spark-worker.service
+
+    - name: Start Spark worker
+      systemd:
+        name: spark-worker
+        state: started
+        enabled: yes
+        daemon_reload: yes
